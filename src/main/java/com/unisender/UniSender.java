@@ -294,8 +294,9 @@ public class UniSender {
 		
 		executeMethod("unsubscribe", map);
 	}
+	
 	/*
-	 * TODO: importContacts, exportContacts
+	 * TODO: exportContacts
 	 */
 	
 	public ImportContactsResponse importContacts(ImportContactsRequest ic) throws UniSenderMethodException, UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
@@ -566,7 +567,7 @@ public class UniSender {
 			final JSONObject res = response.getJSONObject("result");
 			if (res == null){
 				//we've got an array
-				JSONArray resa = res.getJSONArray("result");
+				JSONArray resa = response.getJSONArray("result");
 				for (int i = 0; i < resa.length(); ++i) {
 					final JSONObject jso = resa.getJSONObject(i);
 					result.add(new SendEmailResponse(
