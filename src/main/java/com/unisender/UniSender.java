@@ -17,6 +17,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.unisender.entities.Campaign;
+import com.unisender.entities.Contact;
 import com.unisender.entities.EmailMessage;
 import com.unisender.entities.Field;
 import com.unisender.entities.MailList;
@@ -33,6 +34,7 @@ import com.unisender.requests.ExcludeRequest;
 import com.unisender.requests.GetCampaignDeliveryStatsRequest;
 import com.unisender.requests.SendEmailRequest;
 import com.unisender.requests.SubscribeRequest;
+import com.unisender.responses.ActivateContactsResponse;
 import com.unisender.responses.GetCampaignDeliveryStatsResponse;
 import com.unisender.responses.SendEmailResponse;
 import com.unisender.responses.SendSmsResponse;
@@ -289,8 +291,34 @@ public class UniSender {
 		executeMethod("unsubscribe", map);
 	}
 	/*
-	 * TODO: importContacts, exportContacts, activateContacts
+	 * TODO: importContacts, exportContacts
 	 */
+	
+	public ActivateContactsResponse activateContacts(Contact contact) throws UniSenderMethodException, UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
+		Map<String, String> map = createMap();
+		map.put("contact_type", contact.getContactType().toString());
+		
+		List<MailList> listIds = contact.getListsIds();
+		if (listIds != null){
+			MapUtils.putIfNotNull(map, "list_ids", StringUtils.joinMailList(listIds, ","));
+		} else {
+			MapUtils.putIfNotNull(map, "contacts", contact.getContacts());
+		}
+		
+		JSONObject response = executeMethod("activateContacts", map);
+		try {
+			Integer activated = response.getInt("activated");
+			int activationRI = response.optInt("activation_request_id", -1);
+			if (activationRI == -1){
+				return new ActivateContactsResponse(activated);
+			} else {
+				return new ActivateContactsResponse(activated, activationRI);
+			}
+		} catch (JSONException e) {
+			throw new UniSenderInvalidResponseException(e);
+		}
+		
+	}
 	
 	private void addEmailMessage(Map<String, String> map, EmailMessage em){
 		MapUtils.putIfNotNull(map, "sender_name", em.getSenderName());
