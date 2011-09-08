@@ -20,6 +20,8 @@ import com.unisender.entities.Campaign;
 import com.unisender.entities.Contact;
 import com.unisender.entities.EmailMessage;
 import com.unisender.entities.Field;
+import com.unisender.entities.FieldData;
+import com.unisender.entities.LogMessage;
 import com.unisender.entities.MailList;
 import com.unisender.entities.Person;
 import com.unisender.entities.SmsMessage;
@@ -32,10 +34,12 @@ import com.unisender.requests.CreateEmailMessageRequest;
 import com.unisender.requests.CreateSmsMessageRequest;
 import com.unisender.requests.ExcludeRequest;
 import com.unisender.requests.GetCampaignDeliveryStatsRequest;
+import com.unisender.requests.ImportContactsRequest;
 import com.unisender.requests.SendEmailRequest;
 import com.unisender.requests.SubscribeRequest;
 import com.unisender.responses.ActivateContactsResponse;
 import com.unisender.responses.GetCampaignDeliveryStatsResponse;
+import com.unisender.responses.ImportContactsResponse;
 import com.unisender.responses.SendEmailResponse;
 import com.unisender.responses.SendSmsResponse;
 import com.unisender.utils.MapUtils;
@@ -294,6 +298,65 @@ public class UniSender {
 	 * TODO: importContacts, exportContacts
 	 */
 	
+	public ImportContactsResponse importContacts(ImportContactsRequest ic) throws UniSenderMethodException, UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
+		Map<String, String> map = createMap();
+		FieldData fd = ic.getFieldData(); 
+		
+		int filedsC = fd.getFiledCount();
+		for (int i = 0; i < filedsC; ++i)
+		{
+			map.put("field_names[" + i + "]", fd.getField(i));
+		}
+		
+		int dataC = fd.getDataCount();
+		for (int i = 0; i < dataC; ++i)
+		{
+			List<String> data = fd.getData(i);
+			int dn = 0;
+			for (String d: data){
+				map.put(String.format(
+						"data[%s][%s]", i, dn),
+						d);
+				++dn;
+			}
+		}
+		
+		MapUtils.putIfNotNull(map, "double_optin", ic.getDoubleOptin());
+		MapUtils.putIfNotNull(map, "overwrite_tags", ic.getOverwriteTags());
+		MapUtils.putIfNotNull(map, "overwrite_lists", ic.getOverwriteLists());
+		
+		JSONObject response = executeMethod("importContacts", map);
+		try {
+			List<LogMessage> logs = null;
+			JSONObject res = response.getJSONObject("result");
+			JSONArray log  = res.optJSONArray("log");
+			
+			if (log != null){
+				logs = new ArrayList<LogMessage>();
+				for (int i = 0; i < log.length(); ++i)
+				{
+					JSONObject jso = log.getJSONObject(i);
+					logs.add( new LogMessage(
+						jso.getInt("index"),
+						jso.getString("code"),
+						jso.getString("message")
+					));
+				}
+			}
+			
+			return new ImportContactsResponse(
+					res.getInt("total"),
+					res.getInt("inserted"),
+					res.getInt("updated"),
+					res.getInt("deleted"),
+					res.getInt("new_emails"),
+					logs
+			);
+		} catch (JSONException e) {
+			throw new UniSenderInvalidResponseException(e);
+		}
+	}
+	
 	public ActivateContactsResponse activateContacts(Contact contact) throws UniSenderMethodException, UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
 		Map<String, String> map = createMap();
 		map.put("contact_type", contact.getContactType().toString());
@@ -307,8 +370,9 @@ public class UniSender {
 		
 		JSONObject response = executeMethod("activateContacts", map);
 		try {
-			Integer activated = response.getInt("activated");
-			int activationRI = response.optInt("activation_request_id", -1);
+			JSONObject result = response.getJSONObject("result");
+			Integer activated = result.getInt("activated");
+			int activationRI = result.optInt("activation_request_id", -1);
 			if (activationRI == -1){
 				return new ActivateContactsResponse(activated);
 			} else {
