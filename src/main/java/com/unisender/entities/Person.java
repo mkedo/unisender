@@ -1,9 +1,12 @@
 package com.unisender.entities;
 
+import java.util.List;
+
 public class Person {
 	private Integer id;
 	private String email;
 	private String phone;
+	private List<Field> fields;
 
 	public Person() {
 	}
@@ -21,6 +24,17 @@ public class Person {
 		this.id = id;
 		this.email = email;
 		this.phone = phone;
+	}
+
+	public Person(String email, String phone) {
+		this.email = email;
+		this.phone = phone;
+	}
+
+	public Person(String email, String phone, List<Field> fields) {
+		this.email = email;
+		this.phone = phone;
+		this.fields = fields;
 	}
 
 	public Integer getId() {
@@ -47,4 +61,11 @@ public class Person {
 		this.phone = phone;
 	}
 
+	public List<Field> getFields() {
+		return fields;
+	}
+
+	public void setFields(List<Field> fields) {
+		this.fields = fields;
+	}
 }

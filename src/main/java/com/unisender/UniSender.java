@@ -18,20 +18,22 @@ import org.json.JSONObject;
 
 import com.unisender.entities.Campaign;
 import com.unisender.entities.EmailMessage;
+import com.unisender.entities.Field;
 import com.unisender.entities.MailList;
 import com.unisender.entities.Person;
 import com.unisender.entities.SmsMessage;
 import com.unisender.exceptions.MethodExceptionCode;
 import com.unisender.exceptions.UniSenderConnectException;
-import com.unisender.exceptions.UniSenderException;
 import com.unisender.exceptions.UniSenderInvalidResponseException;
 import com.unisender.exceptions.UniSenderMethodException;
-import com.unisender.requests.ContactType;
 import com.unisender.requests.CreateCampaignRequest;
 import com.unisender.requests.CreateEmailMessageRequest;
 import com.unisender.requests.CreateSmsMessageRequest;
 import com.unisender.requests.ExcludeRequest;
+import com.unisender.requests.SendEmailRequest;
 import com.unisender.requests.SubscribeRequest;
+import com.unisender.responses.SendEmailResponse;
+import com.unisender.responses.SendSmsResponse;
 import com.unisender.utils.MapUtils;
 import com.unisender.utils.StringUtils;
 import com.unisender.utils.URLEncodedUtils;
@@ -124,7 +126,7 @@ public class UniSender {
 		}
 	}
 	
-	public JSONObject executeMethod(String method, Map<String, String> args) 
+	protected JSONObject executeMethod(String method, Map<String, String> args) 
 					throws UniSenderConnectException, UniSenderInvalidResponseException, UniSenderMethodException {
 		URL url = makeURL(method);
 		String output = execute(url, makeQuery(args));
@@ -229,8 +231,18 @@ public class UniSender {
 		Map<String, String> map = createMap();
 		
 		MapUtils.putIfNotNull(map, "list_ids", StringUtils.joinMailList(sr.getLists(), ","));
+		
 		MapUtils.putIfNotNull(map, "fields[email]", person.getEmail());
 		MapUtils.putIfNotNull(map, "fields[phone]", person.getPhone());
+		
+		List<Field> fields = person.getFields();
+		if (fields != null && !fields.isEmpty()){
+			for (Field f: fields){
+				MapUtils.putIfNotNull(map,
+						"fields["+ f.getName() +"]",
+						f.getValue());
+			}
+		}
 		
 		MapUtils.putIfNotNull(map, "tags", sr.getTags());
 		MapUtils.putIfNotNull(map, "request_ip", sr.getRequestIp());
@@ -278,19 +290,24 @@ public class UniSender {
 	 * TODO: importContacts, exportContacts, activateContacts
 	 */
 	
-	public EmailMessage createEmailMessage(CreateEmailMessageRequest cr) throws UniSenderMethodException, UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
-		Map<String, String> map = createMap();
-		EmailMessage em = cr.getEmailMessage();
-		
+	private void addEmailMessage(Map<String, String> map, EmailMessage em){
 		MapUtils.putIfNotNull(map, "sender_name", em.getSenderName());
 		MapUtils.putIfNotNull(map, "sender_email", em.getSenderEmail());
 		MapUtils.putIfNotNull(map, "subject", em.getSubject());
 		MapUtils.putIfNotNull(map, "body", em.getBody());
-		MapUtils.putIfNotNull(map, "list_id", cr.getListId().getId());
 		
-		MapUtils.putIfNotNull(map, "tag", cr.getTag());
-		MapUtils.putIfNotNull(map, "attachments", em.getAttachments());
 		MapUtils.putIfNotNull(map, "lang", em.getLang());
+		MapUtils.putIfNotNull(map, "attachments", em.getAttachments());
+	}
+	
+	public EmailMessage createEmailMessage(CreateEmailMessageRequest cr) throws UniSenderMethodException, UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
+		Map<String, String> map = createMap();
+		EmailMessage em = cr.getEmailMessage();
+		
+		addEmailMessage(map, em);
+		MapUtils.putIfNotNull(map, "list_id", cr.getListId().getId());
+
+		MapUtils.putIfNotNull(map, "tag", cr.getTag());
 		MapUtils.putIfNotNull(map, "series_day", cr.getSeriesDay());
 		MapUtils.putIfNotNull(map, "series_time", cr.getSeriesTime());
 		
@@ -358,5 +375,117 @@ public class UniSender {
 			throw new UniSenderInvalidResponseException(e);
 		}
 	}
+	
+	/* TODO: getCampaignDeliveryStats */
+	
+	public SendSmsResponse sendSms(
+			String phone,
+			SmsMessage smsMessage) throws UniSenderMethodException, UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
+		Map<String, String> map = createMap();
 		
+		MapUtils.putIfNotNull(map, "phone", phone);
+		MapUtils.putIfNotNull(map, "sender", smsMessage.getSender());
+		MapUtils.putIfNotNull(map, "text", smsMessage.getBody());
+		
+		JSONObject response = executeMethod("sendSms", map);
+		try {
+			JSONObject res = response.getJSONObject("result");
+			return new SendSmsResponse(
+					res.getString("currency"),
+					res.getDouble("price"),
+					res.getString("sms_id")
+			);
+			
+		} catch (JSONException e) {
+			throw new UniSenderInvalidResponseException(e);
+		}
+	}
+	/**
+	 * 
+	 * @param smsId Код сообщения, возвращённый методом sendSms.
+	 * @return status http://www.unisender.com/ru/help/api/checkSms
+	 * <pre>
+	 * ok_sent	 Сообщение отправлено, но статус доставки пока неизвестен. Статус временный и может измениться. 
+	 * ok_delivered	 Сообщение доставлено. Статус окончательный. 
+	 * err_delivery_failed	 Доставка не удалась. Статус окончательный. 
+	 * err_not_allowed	 Доставка невозможна, этот оператор связи не обслуживается. Статус окончательный. 
+	 * err_dest_invalid	 Доставка невозможна, указан неправильный номер. Статус окончательный.
+	 * </pre>
+	 */
+	public String checkSms(String smsId) throws UniSenderMethodException, UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
+		Map<String, String> map = createMap();
+		MapUtils.putIfNotNull(map, "sms_id ", smsId);
+		JSONObject response = executeMethod("checkSms", map);
+		try {
+			JSONObject res = response.getJSONObject("result");
+			return res.getString("status");
+		} catch (JSONException e) {
+			throw new UniSenderInvalidResponseException(e);
+		}
+	}
+	public List<SendEmailResponse> sendEmail(SendEmailRequest sr) throws UniSenderMethodException, UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
+		Map<String, String> map = createMap();
+		
+		MapUtils.putIfNotNull(map, "email", sr.getEmail());
+		addEmailMessage(map, sr.getEmailMessage());
+		
+		MapUtils.putIfNotNull(map, "list_id", sr.getListId());
+		MapUtils.putIfNotNull(map, "track_read", sr.getTrackRead());
+		MapUtils.putIfNotNull(map, "track_links", sr.getTrackLinks());
+		MapUtils.putIfNotNull(map, "attach_multi", sr.getAttachMulti());
+		
+		JSONObject response = executeMethod("sendEmail", map);
+		try {
+			final List<SendEmailResponse> result = new ArrayList<SendEmailResponse>();
+			final JSONObject res = response.getJSONObject("result");
+			if (res == null){
+				//we've got an array
+				JSONArray resa = res.getJSONArray("result");
+				for (int i = 0; i < resa.length(); ++i) {
+					final JSONObject jso = resa.getJSONObject(i);
+					result.add(new SendEmailResponse(
+							jso.getString("email"),
+							jso.getString("id"),
+							jso.getString("error")
+					));
+				}
+			} else {
+				result.add(new SendEmailResponse(
+						res.getString("email"),
+						res.getString("id"),
+						res.getString("error")
+				));
+			}
+
+			return result;
+		} catch (JSONException e) {
+			throw new UniSenderInvalidResponseException(e);
+		}
+	}
+	/**
+	 * 
+	 * @param emailId Код сообщения, возвращённый методом sendEmail.
+	 * @return status 
+	 * @see <a href="http://www.unisender.com/ru/help/api/checkEmail">http://www.unisender.com/ru/help/api/checkEmail</a>
+	 * <pre>
+	 * not_sent	 Сообщение пока ещё не отправлено - находится в очереди на отправку. 
+	 * ok_sent	 Сообщение отправлено, но статус доставки пока неизвестен. Статус временный и может измениться. 
+	 * ok_delivered	 Сообщение доставлено. Может измениться на 'ok_read' или 'ok_link_visited'. 
+	 * err_delivery_failed	 Доставка не удалась. Статус окончательный. 
+	 * err_will_retry	 Одна или несколько попыток доставки оказались неудачными, но попытки продолжаются. Статус неокончательный. 
+	 * err_spam_rejected	 Письмо отклонено сервером как спам. Статус окончательный. 
+	 * err_mailbox_full	 Почтовый ящик получателя переполнен. Статус окончательный.
+	 * </pre>
+	 */
+	public String checkEmail(String emailId) throws UniSenderMethodException, UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
+		Map<String, String> map = createMap();
+		MapUtils.putIfNotNull(map, "email_id", emailId);
+		JSONObject response = executeMethod("checkEmail", map);
+		try {
+			JSONObject res = response.getJSONObject("result");
+			return res.getString("status");
+		} catch (JSONException e) {
+			throw new UniSenderInvalidResponseException(e);
+		}
+	}
 }
