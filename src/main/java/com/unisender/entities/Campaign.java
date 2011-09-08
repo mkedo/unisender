@@ -9,6 +9,12 @@ public class Campaign {
 		super();
 	}
 
+	public Campaign(Integer id) {
+		super();
+		this.id = id;
+	}
+
+
 	public Campaign(Integer id, String status, Integer count) {
 		super();
 		this.id = id;

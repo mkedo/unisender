@@ -30,8 +30,10 @@ import com.unisender.requests.CreateCampaignRequest;
 import com.unisender.requests.CreateEmailMessageRequest;
 import com.unisender.requests.CreateSmsMessageRequest;
 import com.unisender.requests.ExcludeRequest;
+import com.unisender.requests.GetCampaignDeliveryStatsRequest;
 import com.unisender.requests.SendEmailRequest;
 import com.unisender.requests.SubscribeRequest;
+import com.unisender.responses.GetCampaignDeliveryStatsResponse;
 import com.unisender.responses.SendEmailResponse;
 import com.unisender.responses.SendSmsResponse;
 import com.unisender.utils.MapUtils;
@@ -375,9 +377,41 @@ public class UniSender {
 			throw new UniSenderInvalidResponseException(e);
 		}
 	}
-	
-	/* TODO: getCampaignDeliveryStats */
-	
+	public GetCampaignDeliveryStatsResponse getCampaignDeliveryStats(GetCampaignDeliveryStatsRequest sr) throws UniSenderMethodException, UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
+		Map<String, String> map = createMap();
+		MapUtils.putIfNotNull(map, "campaign_id", sr.getCampaign().getId());
+		MapUtils.putIfNotNull(map, "changed_since", sr.getChanged_since());
+		
+		JSONObject response = executeMethod("getCampaignDeliveryStats", map);
+		try {
+			final JSONObject res = response.getJSONObject("result");
+			final List<String> fields = new ArrayList<String>();
+			final List<List<String>> data = new ArrayList<List<String>>();
+			
+			final JSONArray jsFields = res.getJSONArray("fields");
+			for (int i = 0; i < jsFields.length(); ++i)
+			{
+				fields.add(jsFields.getString(i));
+			}
+			JSONArray jsData = res.getJSONArray("data");
+			for (int i = 0; i < jsData.length(); ++i)
+			{
+				ArrayList<String> info = new ArrayList<String>();
+				data.add(info);
+				JSONArray jsDataFields = jsData.getJSONArray(i);
+				
+				for (int j = 0; j < jsDataFields.length(); ++j)
+				{
+					info.add(jsDataFields.getString(j));
+				}
+			}
+		
+			return new GetCampaignDeliveryStatsResponse(fields, data);			
+		} catch (JSONException e) {
+			throw new UniSenderInvalidResponseException(e);
+		}
+			
+	}	
 	public SendSmsResponse sendSms(
 			String phone,
 			SmsMessage smsMessage) throws UniSenderMethodException, UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
