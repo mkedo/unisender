@@ -27,19 +27,24 @@ import com.unisender.entities.MailList;
 import com.unisender.entities.Person;
 import com.unisender.entities.SmsMessage;
 import com.unisender.entities.Tag;
+import com.unisender.entities.User;
 import com.unisender.exceptions.MethodExceptionCode;
 import com.unisender.exceptions.UniSenderConnectException;
 import com.unisender.exceptions.UniSenderInvalidResponseException;
 import com.unisender.exceptions.UniSenderMethodException;
+import com.unisender.requests.CheckUserExistsRequest;
 import com.unisender.requests.CreateCampaignRequest;
 import com.unisender.requests.CreateEmailMessageRequest;
 import com.unisender.requests.CreateSmsMessageRequest;
 import com.unisender.requests.ExcludeRequest;
 import com.unisender.requests.GetCampaignDeliveryStatsRequest;
 import com.unisender.requests.ImportContactsRequest;
+import com.unisender.requests.RegisterRequest;
 import com.unisender.requests.SendEmailRequest;
 import com.unisender.requests.SubscribeRequest;
+import com.unisender.requests.ValidateSenderRequest;
 import com.unisender.responses.ActivateContactsResponse;
+import com.unisender.responses.CheckUserExistsResponse;
 import com.unisender.responses.GetCampaignDeliveryStatsResponse;
 import com.unisender.responses.ImportContactsResponse;
 import com.unisender.responses.SendEmailResponse;
@@ -719,4 +724,57 @@ public class UniSender {
 		executeMethod("deleteTag", map);
 	}
 	
+	public void validateSender(ValidateSenderRequest vsr) throws UniSenderMethodException, UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
+		Map<String, String> map = createMap();
+		MapUtils.putIfNotNull(map, "email", vsr.getEmail());
+		MapUtils.putIfNotNull(map, "login", vsr.getLogin());
+		executeMethod("validateSender", map);
+	}
+	/**
+	 * 
+	 * @param RegisterRequest
+	 * @return api_key
+	 * @see <a href="http://www.unisender.com/ru/help/api/register">http://www.unisender.com/ru/help/api/register</a>
+	 */
+	public String register(RegisterRequest rr) throws UniSenderMethodException, UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
+		Map<String, String> map = createMap();
+		User u = rr.getUser();
+		
+		MapUtils.putIfNotNull(map, "email", u.getEmail());
+		MapUtils.putIfNotNull(map, "login", u.getLogin());
+		
+		MapUtils.putIfNotNull(map, "password", u.getPassword());
+		MapUtils.putIfNotNull(map, "notify", rr.getNotify());
+		MapUtils.putIfNotNull(map, "extra", rr.getExtra());
+		MapUtils.putIfNotNull(map, "timezone", rr.getTimezone());
+		MapUtils.putIfNotNull(map, "country_code", rr.getCountryCode());
+		MapUtils.putIfNotNull(map, "currency_code", rr.getCurrencyCode());
+		MapUtils.putIfNotNull(map, "ip", rr.getIp());
+		MapUtils.putIfNotNull(map, "api_mode", rr.getApiMode());
+			
+		JSONObject response = executeMethod("register", map);
+		try {
+			JSONObject res = response.getJSONObject("result");
+			return res.getString("api_key");
+		} catch (JSONException e) {
+			throw new UniSenderInvalidResponseException(e);
+		}
+	}
+	public CheckUserExistsResponse checkUserExists(CheckUserExistsRequest uer) throws UniSenderMethodException, UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
+		Map<String, String> map = createMap();
+
+		MapUtils.putIfNotNull(map, "login", uer.getLogin());
+		MapUtils.putIfNotNull(map, "email", uer.getEmail());
+			
+		JSONObject response = executeMethod("checkUserExists", map);
+		try {
+			JSONObject res = response.getJSONObject("result");
+			return new CheckUserExistsResponse(
+					res.getInt("login_exists"),
+					res.getInt("email_exists")
+					);
+		} catch (JSONException e) {
+			throw new UniSenderInvalidResponseException(e);
+		}
+	}
 }
