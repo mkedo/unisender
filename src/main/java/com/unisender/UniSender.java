@@ -38,6 +38,7 @@ import com.unisender.requests.CreateCampaignRequest;
 import com.unisender.requests.CreateEmailMessageRequest;
 import com.unisender.requests.CreateSmsMessageRequest;
 import com.unisender.requests.ExcludeRequest;
+import com.unisender.requests.ExportContactsRequest;
 import com.unisender.requests.GetCampaignDeliveryStatsRequest;
 import com.unisender.requests.ImportContactsRequest;
 import com.unisender.requests.RegisterRequest;
@@ -64,7 +65,6 @@ public class UniSender {
 	private boolean isTestMode = false;
 	
 	private static String API_HOST = "api.unisender.com";
-	//private static final String API_HOST = "localhost";
 	private static final String API_ENCODING = "UTF-8";
 	
 	
@@ -829,4 +829,52 @@ public class UniSender {
 		}
 	}
 	
+	public FieldData exportContacts(ExportContactsRequest ecr) throws UniSenderMethodException, UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
+		Map<String, String> map = createMap();
+		
+		MailList mailList = ecr.getListId();
+		if (mailList != null){
+			MapUtils.putIfNotNull(map, "list_id", mailList.getId());
+		}
+		
+		List<String> fields = ecr.getFieldNames();
+		if (fields != null){
+			int count = 0;
+			for (String field: fields){
+				MapUtils.putIfNotNull(map, "field_names["+count+"]", field);
+				++count;
+			}
+		}
+		
+		MapUtils.putIfNotNull(map, "offset", ecr.getOffset());
+		MapUtils.putIfNotNull(map, "limit", ecr.getLimit());
+		
+		JSONObject response = executeMethod("exportContacts", map);
+		try {
+			JSONObject res = response.getJSONObject("result");
+			
+			final FieldData fd = new FieldData();
+			
+			JSONArray jfields = res.getJSONArray("field_names");
+			for (int i = 0; i < jfields.length(); ++i)
+			{
+				final String field = jfields.getString(i);
+				fd.addField(field);
+			}
+			
+			final JSONArray jdatas = res.getJSONArray("data");
+			for (int i = 0; i < jdatas.length(); ++i){
+				JSONArray jdata = jdatas.getJSONArray(i);
+				final List<String> values = new ArrayList<String>();
+				for (int j = 0; j < jdata.length(); ++j){
+					values.add(jdata.getString(j));
+				}
+				fd.addValues(values);
+			}
+			return fd;
+			
+		} catch (JSONException e) {
+			throw new UniSenderInvalidResponseException(e);
+		}
+	}
 }
