@@ -29,4 +29,11 @@ public class LogMessage {
 	public void setMessage(String message) {
 		this.message = message;
 	}
+	
+	@Override
+	public String toString(){
+		return "index:" + this.index
+			+ " code:" + this.code
+			+ " message:" + this.message;
+	}
 }

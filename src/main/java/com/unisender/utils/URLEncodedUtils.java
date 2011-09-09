@@ -24,7 +24,7 @@ public class URLEncodedUtils {
 		while (it.hasNext()) {
 			Map.Entry<String, String> pairs = (Map.Entry<String, String>) it.next();
 			final String encodeName = encode(pairs.getKey(), encoding);
-			final String value = pairs.getValue();
+			final String value = ((Object)pairs.getValue()).toString();
 			final String encodedValue = value == null ? "" : encode(value,
 					encoding);
 			if (sb.length() > 0) {

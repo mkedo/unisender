@@ -36,4 +36,11 @@ public class SendEmailResponse {
 		this.error = error;
 	}
 	
+	@Override
+	public String toString(){
+		return "id: " + this.id
+			+ " email: " + this.email
+			+ " error" + this.error;
+	}
+	
 }

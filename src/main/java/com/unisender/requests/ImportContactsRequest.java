@@ -10,6 +10,12 @@ public class ImportContactsRequest {
 	private Integer overwriteTags;
 	private Integer overwriteLists;
 
+	
+	
+	public ImportContactsRequest(FieldData fieldData) {
+		this.fieldData = fieldData;
+	}
+
 	public Integer getDoubleOptin() {
 		return doubleOptin;
 	}

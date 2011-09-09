@@ -4,7 +4,7 @@ public class DefaultConfig implements Config {
 	private String apiKey = "";
 	private String language = "ru";
 	private boolean useHttps = false;
-	private boolean isTestMode = false;
+	private boolean isTestMode = true;
 
 	public DefaultConfig(String apiKey) {
 		super();
@@ -17,15 +17,15 @@ public class DefaultConfig implements Config {
 		this.language = language;
 	}
 
-	public DefaultConfig(String apiKey, String language, Boolean useHttps) {
+	public DefaultConfig(String apiKey, String language, boolean useHttps) {
 		super();
 		this.apiKey = apiKey;
 		this.language = language;
 		this.useHttps = useHttps;
 	}
 
-	public DefaultConfig(String apiKey, String language, Boolean useHttps,
-			Boolean isTestMode) {
+	public DefaultConfig(String apiKey, String language, boolean useHttps,
+			boolean isTestMode) {
 		super();
 		this.apiKey = apiKey;
 		this.language = language;
@@ -49,19 +49,19 @@ public class DefaultConfig implements Config {
 		this.language = language;
 	}
 
-	public Boolean getUseHttps() {
+	public boolean getUseHttps() {
 		return useHttps;
 	}
 
-	public void setUseHttps(Boolean useHttps) {
+	public void setUseHttps(boolean useHttps) {
 		this.useHttps = useHttps;
 	}
 
-	public Boolean getIsTestMode() {
+	public boolean getIsTestMode() {
 		return isTestMode;
 	}
 
-	public void setIsTestMode(Boolean isTestMode) {
+	public void setIsTestMode(boolean isTestMode) {
 		this.isTestMode = isTestMode;
 	}
 

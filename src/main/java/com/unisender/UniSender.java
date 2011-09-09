@@ -17,14 +17,16 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.unisender.entities.Campaign;
-import com.unisender.entities.Contact;
+import com.unisender.entities.Contacts;
 import com.unisender.entities.EmailMessage;
 import com.unisender.entities.Field;
 import com.unisender.entities.FieldData;
+import com.unisender.entities.FieldType;
 import com.unisender.entities.LogMessage;
 import com.unisender.entities.MailList;
 import com.unisender.entities.Person;
 import com.unisender.entities.SmsMessage;
+import com.unisender.entities.Tag;
 import com.unisender.exceptions.MethodExceptionCode;
 import com.unisender.exceptions.UniSenderConnectException;
 import com.unisender.exceptions.UniSenderInvalidResponseException;
@@ -51,10 +53,10 @@ public class UniSender {
 	private String apiKey;
 	private String language;
 	private Boolean useHttps;
-	private Boolean isTestMode = true;
+	private boolean isTestMode = false;
 	
-	//private static String API_HOST = "api.unisender.com";
-	private static final String API_HOST = "localhost";
+	private static String API_HOST = "api.unisender.com";
+	//private static final String API_HOST = "localhost";
 	private static final String API_ENCODING = "UTF-8";
 	
 	
@@ -138,13 +140,12 @@ public class UniSender {
 					throws UniSenderConnectException, UniSenderInvalidResponseException, UniSenderMethodException {
 		URL url = makeURL(method);
 		String output = execute(url, makeQuery(args));
-		System.out.println("Got: \n" + output);
 		try {
 			JSONObject response = new JSONObject(output);
 			checkErrors(response);
 			return response;
 		} catch (JSONException e) {
-			throw new UniSenderInvalidResponseException(e);
+			throw new UniSenderInvalidResponseException(e, output);
 		}
 	}
 
@@ -358,15 +359,15 @@ public class UniSender {
 		}
 	}
 	
-	public ActivateContactsResponse activateContacts(Contact contact) throws UniSenderMethodException, UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
+	public ActivateContactsResponse activateContacts(Contacts contacts) throws UniSenderMethodException, UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
 		Map<String, String> map = createMap();
-		map.put("contact_type", contact.getContactType().toString());
+		map.put("contact_type", contacts.getContactType().toString());
 		
-		List<MailList> listIds = contact.getListsIds();
+		List<MailList> listIds = contacts.getListsIds();
 		if (listIds != null){
 			MapUtils.putIfNotNull(map, "list_ids", StringUtils.joinMailList(listIds, ","));
 		} else {
-			MapUtils.putIfNotNull(map, "contacts", contact.getContacts());
+			MapUtils.putIfNotNull(map, "contacts", contacts.getContacts());
 		}
 		
 		JSONObject response = executeMethod("activateContacts", map);
@@ -615,4 +616,107 @@ public class UniSender {
 			throw new UniSenderInvalidResponseException(e);
 		}
 	}
+	
+	public Field createField(Field field) throws UniSenderMethodException, UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
+		Map<String, String> map = createMap();
+		MapUtils.putIfNotNull(map, "name", field.getName());
+		MapUtils.putIfNotNull(map, "type", field.getFieldType());
+		MapUtils.putIfNotNull(map, "is_visible", field.getIsVisible());
+		MapUtils.putIfNotNull(map, "view_pos", field.getViewPos());
+		JSONObject response = executeMethod("createField", map);
+		try {
+			JSONObject res = response.getJSONObject("result");
+			field.setId(res.getInt("id"));
+			return field;
+		} catch (JSONException e) {
+			throw new UniSenderInvalidResponseException(e);
+		}
+	}
+	
+	public List<Field> getFields() throws UniSenderMethodException, UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
+		JSONObject response = executeMethod("getFields", null);
+		try {
+			final List<Field> result = new ArrayList<Field>();
+			final JSONArray res = response.getJSONArray("result");
+			
+			for (int i = 0; i < res.length(); ++i)
+			{
+				final JSONObject jfield = res.getJSONObject(i);
+				
+				FieldType type = FieldType.STRING;
+				String ttype = jfield.getString("type");
+				if ("text".equals(ttype)) {
+					type = FieldType.TEXT;
+				} else if ("number".equals(ttype)) {
+					type = FieldType.NUMBER;
+				} else if ("bool".equals(ttype)) {
+					type = FieldType.BOOL;
+				}
+				
+				final Field field = new Field(
+						jfield.getInt("id"),
+						jfield.getString("name"),
+						null, // no value in this response
+						type,
+						jfield.getInt("is_visible"),
+						jfield.getInt("view_pos")						
+				);
+				result.add(field);
+			}
+			return result;
+		} catch (JSONException e) {
+			throw new UniSenderInvalidResponseException(e);
+		}
+	}
+	
+	public Field updateFiled(Field field) throws UniSenderMethodException, UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
+		Map<String, String> map = createMap();
+		MapUtils.putIfNotNull(map, "id", field.getId());
+		MapUtils.putIfNotNull(map, "name", field.getName());
+		MapUtils.putIfNotNull(map, "type", field.getFieldType());
+		MapUtils.putIfNotNull(map, "is_visible", field.getIsVisible());
+		MapUtils.putIfNotNull(map, "view_pos", field.getViewPos());
+		JSONObject response = executeMethod("updateFiled", map);
+		try {
+			JSONObject res = response.getJSONObject("result");
+			field.setId(res.getInt("id"));
+			return field;
+		} catch (JSONException e) {
+			throw new UniSenderInvalidResponseException(e);
+		}
+	}
+	public void deleteField(Field field) throws UniSenderMethodException, UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
+		Map<String, String> map = createMap();
+		MapUtils.putIfNotNull(map, "id", field.getId());
+		executeMethod("deleteField", map);
+	}
+	
+	
+	public List<Tag> getTags() throws UniSenderMethodException, UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
+		JSONObject response = executeMethod("getTags", null);
+		try {
+			final List<Tag> result = new ArrayList<Tag>();
+			final JSONArray res = response.getJSONArray("result");
+			
+			for (int i = 0; i < res.length(); ++i)
+			{
+				final JSONObject jtag = res.getJSONObject(i);
+				final Tag tag = new Tag(
+						jtag.getInt("id"),
+						jtag.getString("name")				
+				);
+				result.add(tag);
+			}
+			return result;
+		} catch (JSONException e) {
+			throw new UniSenderInvalidResponseException(e);
+		}
+	}
+	
+	public void deleteTag(Tag tag) throws UniSenderMethodException, UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
+		Map<String, String> map = createMap();
+		MapUtils.putIfNotNull(map, "id", tag.getId());
+		executeMethod("deleteTag", map);
+	}
+	
 }
