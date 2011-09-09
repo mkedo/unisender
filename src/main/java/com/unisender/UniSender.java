@@ -43,6 +43,7 @@ import com.unisender.requests.ImportContactsRequest;
 import com.unisender.requests.RegisterRequest;
 import com.unisender.requests.SendEmailRequest;
 import com.unisender.requests.SubscribeRequest;
+import com.unisender.requests.TransferMoneyRequest;
 import com.unisender.requests.ValidateSenderRequest;
 import com.unisender.responses.ActivateContactsResponse;
 import com.unisender.responses.CheckUserExistsResponse;
@@ -50,6 +51,7 @@ import com.unisender.responses.GetCampaignDeliveryStatsResponse;
 import com.unisender.responses.ImportContactsResponse;
 import com.unisender.responses.SendEmailResponse;
 import com.unisender.responses.SendSmsResponse;
+import com.unisender.responses.TransferMoneyResponse;
 import com.unisender.utils.MapUtils;
 import com.unisender.utils.StringUtils;
 import com.unisender.utils.URLEncodedUtils;
@@ -803,4 +805,28 @@ public class UniSender {
 			throw new UniSenderInvalidResponseException(e);
 		}
 	}
+	public TransferMoneyResponse transferMoney(TransferMoneyRequest mr) throws UniSenderMethodException, UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
+		Map<String, String> map = createMap();
+		
+		MapUtils.putIfNotNull(map, "source_login", mr.getSourceLogin());
+		MapUtils.putIfNotNull(map, "target_login", mr.getTargetLogin());
+		MapUtils.putIfNotNull(map, "sum", mr.getSum());
+		MapUtils.putIfNotNull(map, "currency", mr.getCurrency());
+		
+		JSONObject response = executeMethod("transferMoney", map);
+		try {
+			JSONObject res = response.getJSONObject("result");
+			return new TransferMoneyResponse(
+					res.getDouble("source_old_balance"),
+					res.getDouble("source_new_balance"),
+					res.getString("source_currency"),
+					res.getDouble("target_old_balance"),
+					res.getDouble("target_new_balance"),
+					res.getString("target_currency")
+			);
+		} catch (JSONException e) {
+			throw new UniSenderInvalidResponseException(e);
+		}
+	}
+	
 }
