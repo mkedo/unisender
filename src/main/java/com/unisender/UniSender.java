@@ -303,11 +303,7 @@ public class UniSender {
 		
 		executeMethod("unsubscribe", map);
 	}
-	
-	/*
-	 * TODO: exportContacts
-	 */
-	
+		
 	public ImportContactsResponse importContacts(ImportContactsRequest ic) throws UniSenderMethodException, UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
 		Map<String, String> map = createMap();
 		FieldData fd = ic.getFieldData(); 
