@@ -1,33 +1,41 @@
-UniSender API library 
+Java UniSender API library 
 -----------------------------
 UniSender API library  это библиотека написаная на Java для взаимодействия с api 
 сервиса доставки сообщений UniSender ( http://www.unisender.com )
 
 На данный момент реализованы следующие методы:
 
-getLists - получить списки рассылки с их кодами 
-createList - создать новый список рассылки 
-subscribe - подписать адресата на один или несколько списков рассылки 
-exclude - исключить адресата из списков рассылки 
-unsubscribe - отписать адресата от рассылки 
-importContacts - массовый импорт и синхронизация контактов 
-activateContacts - запрос активации контактов
+getLists
+createList
+subscribe 
+exclude 
+unsubscribe 
+importContacts
+exportContacts
+activateContacts
 
-createEmailMessage - создать e-mail для массовой рассылки 
-createSmsMessage - создать SMS для массовой рассылки 
-createCampaign - запланировать массовую отправку e-mail или SMS сообщения 
-getCampaignDeliveryStats - получить отчёт о статусах доставки сообщений для заданной рассылки 
-sendSms - отправить SMS-сообщение одному адресату 
-checkSms - проверить статус доставки SMS 
-sendEmail - упрощённая отправка индивидуальных email-сообщений 
-checkEmail - проверить статус доставки email
+createEmailMessage 
+createSmsMessage 
+createCampaign 
+getCampaignDeliveryStats 
+sendSms 
+checkSms 
+sendEmail 
+checkEmail
 
-getFields - получить список пользовательских полей 
-createField - создать новое поле 
-updateField - изменить параметры поля 
-deleteField - удалить поле 
-getTags - получить список пользовательских меток 
-deleteTag - удалить метку
+getFields 
+createField 
+updateField 
+deleteField 
+getTags
+deleteTag
+
+validateSender
+register
+checkUserExists 
+getUserInfo 
+transferMoney 
+
 
 Примеры можно найти в директории src/examples/java/com/unisender/examples/
 
@@ -35,28 +43,29 @@ deleteTag - удалить метку
 Подробнее про api
 http://www.unisender.com/ru/help/api
 
-UniSender API library
+Java UniSender API library
 ---------------------------------
 UniSender API library is a java client library for unisender.com API.
 
 At the moment, the following methods are supported:
 
-getLists - get all mailing lists with their ids
-createList - creates a new mailing lists 
-subscribe - adds a subscriber to one or more mailing lists
-exclude - excludes a subscriber from a mailing list
-unsubscribe - unsubscribe a subscriber from a mailing list 
-importContacts - imports/synchronizes contacts
-activateContacts - activates contacts
+getLists
+createList
+subscribe 
+exclude 
+unsubscribe 
+importContacts
+exportContacts
+activateContacts
 
-createEmailMessage - creates an email message, but not sends it
-createSmsMessage - creates an sms message, but not sends it
-createCampaign - creates and schedules an email campaign
-getCampaignDeliveryStats - gets campaign delivery statistics
-sendSms - sends a single SMS message
-checkSms - checks delivery status of a sent sms message
-sendEmail - sends am  email message without using templates
-checkEmail - checks delivery status of a sent email message
+createEmailMessage 
+createSmsMessage 
+createCampaign 
+getCampaignDeliveryStats 
+sendSms
+checkSms
+sendEmail
+checkEmail
 
 getFields
 createField
@@ -64,5 +73,11 @@ updateField
 deleteField
 getTags
 deleteTag
+
+validateSender
+register
+checkUserExists 
+getUserInfo
+transferMoney
 
 You can find some examples of using the library in the examples directory src/examples/java/com/unisender/examples/

@@ -16,7 +16,7 @@ import com.unisender.responses.SendEmailResponse;
 
 public class SendMessageExample {
 	
-	public static final String apiKey = "2GMXqcUziKr3Ogr0Q9zsZo1b8IwaIjju7";
+	public static final String apiKey = "<Your_API_Key>";
 	
 	public static void main(String[] args) throws UniSenderException {
 		UniSender us = new UniSender(apiKey);
