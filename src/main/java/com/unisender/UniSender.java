@@ -28,6 +28,7 @@ import com.unisender.entities.Person;
 import com.unisender.entities.SmsMessage;
 import com.unisender.entities.Tag;
 import com.unisender.entities.User;
+import com.unisender.entities.UserInfo;
 import com.unisender.exceptions.MethodExceptionCode;
 import com.unisender.exceptions.UniSenderConnectException;
 import com.unisender.exceptions.UniSenderInvalidResponseException;
@@ -773,6 +774,31 @@ public class UniSender {
 					res.getInt("login_exists"),
 					res.getInt("email_exists")
 					);
+		} catch (JSONException e) {
+			throw new UniSenderInvalidResponseException(e);
+		}
+	}
+	
+	public UserInfo getUserInfo(String login) throws UniSenderMethodException, UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
+		Map<String, String> map = createMap();
+		
+		MapUtils.putIfNotNull(map, "login", login);
+		
+		JSONObject response = executeMethod("getUserInfo", map);
+		try {
+			JSONObject res = response.getJSONObject("result");
+			return new UserInfo(
+					res.getString("login"),
+					res.getString("master"),
+					res.getDouble("balance"),
+					res.getString("currency"),
+					res.getInt("emails_paid"),
+					res.getInt("emails_used"),
+					res.getInt("period_emails_paid"),
+					res.getInt("period_emails_used"),
+					res.getString("email_period_start"),
+					res.getString("email_period_end")
+			);
 		} catch (JSONException e) {
 			throw new UniSenderInvalidResponseException(e);
 		}
