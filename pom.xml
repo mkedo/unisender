@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>UniSender</groupId>
 	<artifactId>UniSender</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>UniSender</name>
@@ -49,6 +49,7 @@
 				<configuration>
 					<source>1.6</source>
 					<target>1.6</target>
+                    <encoding>UTF-8</encoding>
 				</configuration>
 			</plugin>
 		</plugins>
@@ -61,4 +62,9 @@
 			<version>20090211</version>
 		</dependency>
 	</dependencies>
+
+    <properties>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
 </project>
