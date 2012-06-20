@@ -8,9 +8,13 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -33,6 +37,7 @@ import com.unisender.exceptions.MethodExceptionCode;
 import com.unisender.exceptions.UniSenderConnectException;
 import com.unisender.exceptions.UniSenderInvalidResponseException;
 import com.unisender.exceptions.UniSenderMethodException;
+import com.unisender.requests.BatchSendEmailRequest;
 import com.unisender.requests.CheckUserExistsRequest;
 import com.unisender.requests.CreateCampaignRequest;
 import com.unisender.requests.CreateEmailMessageRequest;
@@ -64,8 +69,8 @@ public class UniSender {
 	private Boolean useHttps;
 	private boolean isTestMode = false;
 	
-	private static String API_HOST = "api.unisender.com";
-	private static final String API_ENCODING = "UTF-8";
+	static final String API_HOST = "api.unisender.com";
+	static final String API_ENCODING = "UTF-8";
 	
 	
 	
@@ -157,7 +162,7 @@ public class UniSender {
 		}
 	}
 
-	private String execute(URL url, String postQuery) throws UniSenderConnectException {
+	protected String execute(URL url, String postQuery) throws UniSenderConnectException {
 		HttpURLConnection urlc = null;
 		try {
 			urlc = (HttpURLConnection) url.openConnection();
@@ -556,45 +561,99 @@ public class UniSender {
 		}
 	}
 	public List<SendEmailResponse> sendEmail(SendEmailRequest sr) throws UniSenderMethodException, UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
-		Map<String, String> map = createMap();
-		
-		MapUtils.putIfNotNull(map, "email", sr.getEmail());
-		addEmailMessage(map, sr.getEmailMessage());
-		
-		MapUtils.putIfNotNull(map, "list_id", sr.getListId());
-		MapUtils.putIfNotNull(map, "track_read", sr.getTrackRead());
-		MapUtils.putIfNotNull(map, "track_links", sr.getTrackLinks());
-		MapUtils.putIfNotNull(map, "attach_multi", sr.getAttachMulti());
-		
-		JSONObject response = executeMethod("sendEmail", map);
-		try {
-			final List<SendEmailResponse> result = new ArrayList<SendEmailResponse>();
-			final JSONObject res = response.getJSONObject("result");
-			if (res == null){
-				//we've got an array
-				JSONArray resa = response.getJSONArray("result");
-				for (int i = 0; i < resa.length(); ++i) {
-					final JSONObject jso = resa.getJSONObject(i);
-					result.add(new SendEmailResponse(
-							jso.getString("email"),
-							jso.getString("id"),
-							jso.getString("error")
-					));
-				}
-			} else {
-				result.add(new SendEmailResponse(
-						res.getString("email"),
-						res.getString("id"),
-						res.getString("error")
-				));
-			}
+        Map<String, String> map = createMap();
 
-			return result;
-		} catch (JSONException e) {
-			throw new UniSenderInvalidResponseException(e);
-		}
+        MapUtils.putIfNotNull(map, "email", sr.getEmail());
+        addEmailMessage(map, sr.getEmailMessage());
+
+        MapUtils.putIfNotNull(map, "list_id", sr.getListId());
+        MapUtils.putIfNotNull(map, "track_read", sr.getTrackRead());
+        MapUtils.putIfNotNull(map, "track_links", sr.getTrackLinks());
+        MapUtils.putIfNotNull(map, "attach_multi", sr.getAttachMulti());
+
+        return executeSendEmail(map);
 	}
-	/**
+
+    /**
+     * Calls 'sendEmail' for a batch of messages according to array syntax.
+     *
+     * @param request batch request
+     * @return responses for each sent email, never null
+     *
+     * @throws UniSenderConnectException when connection error occurs
+     * @throws UniSenderMethodException when server returns error
+     * @throws UniSenderInvalidResponseException when server response cannot be parsed
+     *
+     * @see http://www.unisender.com/ru/help/api/sendEmail.html
+     */
+    public List<SendEmailResponse> batchSendEmail(BatchSendEmailRequest request) throws UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
+        Map<String, EmailMessage> messagesByReceiverEmail = request.getMessagesByReceiverEmail();
+
+        if (messagesByReceiverEmail.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Map<String, String> map = createMap();
+        Set<String> allAttachments = new HashSet<String>();
+
+        int i = 0;
+        for (Map.Entry<String, EmailMessage> entry : messagesByReceiverEmail.entrySet()) {
+            String receiverEmail = entry.getKey();
+            EmailMessage emailMessage = entry.getValue();
+            addIndexedEmailMessage(map, i, receiverEmail, emailMessage);
+
+            allAttachments.add(emailMessage.getAttachments());
+            i++;
+        }
+
+        MapUtils.putIfNotNull(map, "lang", request.getLang());
+        MapUtils.putIfNotNull(map, "list_id", request.getMailList());
+        MapUtils.putIfNotNull(map, "track_read", request.getTrackRead());
+        MapUtils.putIfNotNull(map, "track_links", request.getTrackLinks());
+        MapUtils.putIfNotNull(map, "attach_multi", allAttachments.size() > 1 ? 1 : 0);
+
+        return executeSendEmail(map);
+    }
+
+    private void addIndexedEmailMessage(Map<String, String> map, int index, String receiverEmail, EmailMessage emailMessage) {
+        MapUtils.putIfNotNull(map, indexed("email", index), receiverEmail);
+
+        MapUtils.putIfNotNull(map, indexed("sender_name", index), emailMessage.getSenderName());
+        MapUtils.putIfNotNull(map, indexed("sender_email", index), emailMessage.getSenderEmail());
+        MapUtils.putIfNotNull(map, indexed("subject", index), emailMessage.getSubject());
+        MapUtils.putIfNotNull(map, indexed("body", index), emailMessage.getBody());
+
+        MapUtils.putIfNotNull(map, indexed("attachments", index), emailMessage.getAttachments());
+    }
+
+    private static String indexed(String property, int index) {
+        return property + '[' + index + ']';
+    }
+
+    private List<SendEmailResponse> executeSendEmail(Map<String, String> map)
+            throws UniSenderConnectException, UniSenderInvalidResponseException, UniSenderMethodException {
+        JSONObject response = executeMethod("sendEmail", map);
+        try {
+            final List<SendEmailResponse> result = new LinkedList<SendEmailResponse>();
+            final JSONObject res = response.optJSONObject("result");
+            if (res == null) {
+                //we've got an array
+                JSONArray resa = response.getJSONArray("result");
+                for (int i = 0; i < resa.length(); ++i) {
+                    final JSONObject jso = resa.getJSONObject(i);
+                    result.add(new SendEmailResponse(jso.getString("email"), jso.getString("id"), jso.getString("error")));
+                }
+            } else {
+                result.add(new SendEmailResponse(res.getString("email"), res.getString("email_id"), res.getString("error")));
+            }
+
+            return result;
+        } catch (JSONException e) {
+            throw new UniSenderInvalidResponseException(e);
+        }
+    }
+
+    /**
 	 * 
 	 * @param emailId Код сообщения, возвращённый методом sendEmail.
 	 * @return status 
