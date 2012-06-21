@@ -378,17 +378,24 @@ public class UniSender {
 		} else {
 			MapUtils.putIfNotNull(map, "contacts", contacts.getContacts());
 		}
-		
+        MapUtils.putIfNotNull(map, "invite", contacts.getInvite());
+        MapUtils.putIfNotNull(map, "comment", contacts.getComment());
+
 		JSONObject response = executeMethod("activateContacts", map);
 		try {
 			JSONObject result = response.getJSONObject("result");
-			Integer activated = result.getInt("activated");
-			int activationRI = result.optInt("activation_request_id", -1);
-			if (activationRI == -1){
-				return new ActivateContactsResponse(activated);
-			} else {
-				return new ActivateContactsResponse(activated, activationRI);
-			}
+
+            if(1 == contacts.getInvite()) {
+                return new ActivateContactsResponse(result.getInt("campaign_id"), result.getString("campaign_status"));
+            } else {
+                Integer activated = result.getInt("activated");
+                int activationRI = result.optInt("activation_request_id", -1);
+                if (activationRI == -1) {
+                    return new ActivateContactsResponse(activated);
+                } else {
+                    return new ActivateContactsResponse(activated, activationRI);
+                }
+            }
 		} catch (JSONException e) {
 			throw new UniSenderInvalidResponseException(e);
 		}
