@@ -140,7 +140,9 @@ public class UniSender {
 					mec = MethodExceptionCode.INVALID_ARG;
 				} else if ("not_enough_money".equals(code)) {
 					mec = MethodExceptionCode.NOT_ENOUGH_MONEY;
-				}
+				} else if ("too_many_double_optins".equals(code)) {
+                    mec = MethodExceptionCode.TOO_MANY_DOUBLE_OPTINS;
+                }
 				throw new UniSenderMethodException(mec, errorMsg);
 				
 			} catch (JSONException e) {
