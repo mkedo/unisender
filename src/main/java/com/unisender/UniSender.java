@@ -650,10 +650,10 @@ public class UniSender {
                 JSONArray resa = response.getJSONArray("result");
                 for (int i = 0; i < resa.length(); ++i) {
                     final JSONObject jso = resa.getJSONObject(i);
-                    result.add(new SendEmailResponse(jso.getString("email"), jso.getString("id"), jso.getString("error")));
+                    result.add(new SendEmailResponse(jso.getString("email"), jso.optString("id"), jso.optString("error")));
                 }
             } else {
-                result.add(new SendEmailResponse(res.getString("email"), res.getString("email_id"), res.getString("error")));
+                result.add(new SendEmailResponse(res.getString("email"), res.optString("email_id"), res.optString("error")));
             }
 
             return result;
