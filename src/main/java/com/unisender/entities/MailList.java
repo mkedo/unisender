@@ -35,6 +35,6 @@ public class MailList {
 	}
 	@Override
 	public String toString(){
-		return this.id + ": " + this.title;
+		return Integer.toString(this.id);
 	}
 }
