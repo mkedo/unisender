@@ -9,8 +9,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -113,7 +113,7 @@ public class UniSender {
 
 	private String makeQuery(Map<String, String> args) {
 		if (args == null){
-			args = new HashMap<String, String>(1);
+			args = new LinkedHashMap<String, String>(1);
 		}
 		
 		args.put("api_key", this.apiKey);
@@ -205,7 +205,7 @@ public class UniSender {
 		}
 	}
 	private Map<String, String> createMap(){
-		return new HashMap<String, String>();
+		return new LinkedHashMap<String, String>();
 	}
 	
 	private Map<String, String> createMap(String argName, String argVal){
@@ -603,7 +603,7 @@ public class UniSender {
         }
 
         Map<String, String> map = createMap();
-        Set<String> allAttachments = new HashSet<String>();
+        Set<String> allAttachments = new LinkedHashSet<String>();
 
         int i = 0;
         for (Map.Entry<String, EmailMessage> entry : messagesByReceiverEmail.entrySet()) {
