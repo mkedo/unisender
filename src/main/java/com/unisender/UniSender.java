@@ -9,6 +9,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -678,16 +679,44 @@ public class UniSender {
 	 * </pre>
 	 */
 	public String checkEmail(String emailId) throws UniSenderMethodException, UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
-		Map<String, String> map = createMap();
-		MapUtils.putIfNotNull(map, "email_id", emailId);
-		JSONObject response = executeMethod("checkEmail", map);
-		try {
-			JSONObject res = response.getJSONObject("result");
-			return res.getString("status");
-		} catch (JSONException e) {
-			throw new UniSenderInvalidResponseException(e);
-		}
-	}
+        Map<String, String> result = checkEmail(Collections.singleton(emailId));
+        if (result.isEmpty()) {
+            throw new UniSenderInvalidResponseException("No result received for email id " + emailId);
+        }
+        return result.get(emailId);
+    }
+
+    public Map<String, String> checkEmail(Set<String> emailIds) throws UniSenderMethodException, UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
+        if (emailIds == null || emailIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        Map<String, String> map = createMap();
+        MapUtils.putIfNotNull(map, "email_id", StringUtils.join(emailIds, ","));
+        JSONObject response = executeMethod("checkEmail", map);
+        try {
+            JSONObject res = response.optJSONObject("result");
+            if (res == null) {
+                return Collections.emptyMap();
+            }
+
+            String singleStatus = res.optString("status");
+            if (singleStatus != null && !singleStatus.trim().isEmpty()) {
+                String singleId = emailIds.iterator().next();
+                return Collections.singletonMap(singleId, singleStatus);
+            }
+
+            JSONArray resa = res.getJSONArray("statuses");
+            Map<String, String> result = new HashMap<String, String>();
+            for (int i = 0; i < resa.length(); ++i) {
+                JSONObject jso = resa.getJSONObject(i);
+                result.put(jso.getString("id"), jso.getString("status"));
+            }
+            return result;
+        } catch (JSONException e) {
+            throw new UniSenderInvalidResponseException(e);
+        }
+    }
 	
 	public Field createField(Field field) throws UniSenderMethodException, UniSenderConnectException, UniSenderMethodException, UniSenderInvalidResponseException {
 		Map<String, String> map = createMap();

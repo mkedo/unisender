@@ -3,9 +3,12 @@ package com.unisender;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -19,6 +22,7 @@ import com.unisender.exceptions.UniSenderConnectException;
 import com.unisender.requests.BatchSendEmailRequest;
 import com.unisender.responses.SendEmailResponse;
 
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -81,6 +85,27 @@ public class UnisenderTest {
         assertLastQueryContains("email[1]=" + MAIL_2);
         assertLastQueryContains("subject[1]=" + SUBJECT_2);
         assertLastQueryContains("body[1]=" + BODY_2);
+    }
+
+    @Test
+    public void testCheckEmail() throws Exception {
+        Set<String> ids = new HashSet<String>(asList("59847824", "59847829", "59847834"));
+        nextResponse =
+                "{\"result\":{\"statuses\":[" +
+                        "{\"id\":59847824,\"status\":\"ok_sent\"}," +
+                        "{\"id\":59847829,\"status\":\"err_not_sent\"}," +
+                        "{\"id\":59847834,\"status\":\"ok_sent\"}" +
+                "]}}";
+        Map<String, String> response = uniSender.checkEmail(ids);
+        assertLastQueryContains("59847824");
+        assertLastQueryContains("59847829");
+        assertLastQueryContains("59847834");
+
+        Map<String, String> expected = new HashMap<String, String>();
+        expected.put("59847824", "ok_sent");
+        expected.put("59847829", "err_not_sent");
+        expected.put("59847834", "ok_sent");
+        assertEquals(expected, response);
     }
 
     private void assertLastQueryContains(String substring) throws UnsupportedEncodingException {
