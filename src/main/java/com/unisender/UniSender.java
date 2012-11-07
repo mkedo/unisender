@@ -602,6 +602,7 @@ public class UniSender {
         MapUtils.putIfNotNull(map, "track_read", sr.getTrackRead());
         MapUtils.putIfNotNull(map, "track_links", sr.getTrackLinks());
         MapUtils.putIfNotNull(map, "attach_multi", sr.getAttachMulti());
+        MapUtils.putIfNotNull(map, "user_campaign_id", sr.getUserCampaignId());
 
         return executeSendEmail(map);
 	}
@@ -643,6 +644,7 @@ public class UniSender {
         MapUtils.putIfNotNull(map, "track_read", request.getTrackRead());
         MapUtils.putIfNotNull(map, "track_links", request.getTrackLinks());
         MapUtils.putIfNotNull(map, "attach_multi", allAttachments.size() > 1 ? 1 : 0);
+        MapUtils.putIfNotNull(map, "user_campaign_id", request.getUserCampaignId());
 
         return executeSendEmail(map);
     }

@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -39,6 +40,7 @@ public class UnisenderTest {
     private static final String SUBJECT_2 = "Subject2";
     private static final String BODY_1 = "<html>body1</html>";
     private static final String BODY_2 = "<html>body2</html>";
+    private static final String USER_CAMPAIGN_ID = UUID.randomUUID().toString();
 
     private UniSender uniSender;
     private MailList mailList;
@@ -65,7 +67,7 @@ public class UnisenderTest {
                 MAIL_2, new EmailMessage(SENDER_NAME, SENDER_EMAIL, SUBJECT_2, BODY_2)
         );
 
-        BatchSendEmailRequest request = new BatchSendEmailRequest(messages, mailList, null, null, null);
+        BatchSendEmailRequest request = new BatchSendEmailRequest(messages, mailList, null, null, null, USER_CAMPAIGN_ID);
 
         nextResponse = toJsonMessages(createMap(MAIL_1, "", MAIL_2, ""));
         List<SendEmailResponse> responses = uniSender.batchSendEmail(request);
@@ -85,6 +87,7 @@ public class UnisenderTest {
         assertLastQueryContains("email[1]=" + MAIL_2);
         assertLastQueryContains("subject[1]=" + SUBJECT_2);
         assertLastQueryContains("body[1]=" + BODY_2);
+        assertLastQueryContains("user_campaign_id=" + USER_CAMPAIGN_ID);
     }
 
     @Test
