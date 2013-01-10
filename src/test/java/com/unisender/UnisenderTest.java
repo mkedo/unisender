@@ -41,6 +41,7 @@ public class UnisenderTest {
     private static final String BODY_1 = "<html>body1</html>";
     private static final String BODY_2 = "<html>body2</html>";
     private static final String USER_CAMPAIGN_ID = UUID.randomUUID().toString();
+    private static final String REPLY_TO = "noreply@test.tt";
 
     private UniSender uniSender;
     private MailList mailList;
@@ -66,6 +67,7 @@ public class UnisenderTest {
                 MAIL_1, new EmailMessage(SENDER_NAME, SENDER_EMAIL, SUBJECT_1, BODY_1),
                 MAIL_2, new EmailMessage(SENDER_NAME, SENDER_EMAIL, SUBJECT_2, BODY_2)
         );
+        messages.get(MAIL_1).setReplyTo(REPLY_TO);
 
         BatchSendEmailRequest request = new BatchSendEmailRequest(messages, mailList, null, null, null, USER_CAMPAIGN_ID);
 
@@ -88,6 +90,7 @@ public class UnisenderTest {
         assertLastQueryContains("subject[1]=" + SUBJECT_2);
         assertLastQueryContains("body[1]=" + BODY_2);
         assertLastQueryContains("user_campaign_id=" + USER_CAMPAIGN_ID);
+        assertLastQueryContains("headers[0]=Reply-To:" + REPLY_TO);
     }
 
     @Test

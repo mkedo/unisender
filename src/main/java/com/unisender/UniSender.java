@@ -658,6 +658,18 @@ public class UniSender {
         MapUtils.putIfNotNull(map, indexed("body", index), emailMessage.getBody());
 
         MapUtils.putIfNotNull(map, indexed("attachments", index), emailMessage.getAttachments());
+
+        String headers = composeHeaders(emailMessage);
+        if (!headers.isEmpty()) {
+            MapUtils.putIfNotNull(map, indexed("headers", index), headers);
+        }
+    }
+
+    private String composeHeaders(EmailMessage message) {
+        Map<String, String> headers = new HashMap<String, String>();
+        MapUtils.putIfNotNull(headers, "Reply-To", message.getReplyTo());
+        MapUtils.putIfNotNull(headers, "Priority", message.getPriority());
+        return StringUtils.join(headers, ";", ":");
     }
 
     private static String indexed(String property, int index) {

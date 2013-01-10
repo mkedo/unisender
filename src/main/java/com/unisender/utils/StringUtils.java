@@ -1,7 +1,9 @@
 package com.unisender.utils;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import com.unisender.entities.MailList;
 
@@ -20,8 +22,24 @@ public class StringUtils {
 		
 		return sb.toString();
 	}
-	
-	public static String joinMailList(List<MailList> list, String separator){
+
+    /**
+     * Joins the given map into string.
+     *
+     * @param map               map
+     * @param entrySeparator    entry separator
+     * @param keyValueSeparator key value separator
+     * @return joined string
+     */
+    public static String join(Map<?, ?> map, String entrySeparator, String keyValueSeparator) {
+        Collection<String> entries = new ArrayList<String>(map.size());
+        for (Map.Entry<?, ?> entry : map.entrySet()) {
+            entries.add(entry.getKey() + keyValueSeparator + entry.getValue());
+        }
+        return join(entries, entrySeparator);
+    }
+
+    public static String joinMailList(List<MailList> list, String separator){
 		if (list == null)
 			return null;
 		StringBuilder sb = new StringBuilder();
