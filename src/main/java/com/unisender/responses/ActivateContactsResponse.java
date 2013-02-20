@@ -4,6 +4,9 @@ public class ActivateContactsResponse {
 	private Integer activated;
 	private Integer activationRequestId;
 
+    private Integer campaignId;
+    private String campaignStatus;
+
 	public ActivateContactsResponse(Integer activated,
 			Integer activationRequestId) {
 		this.activated = activated;
@@ -14,7 +17,12 @@ public class ActivateContactsResponse {
 		this.activated = activated;
 	}
 
-	public Integer getActivated() {
+    public ActivateContactsResponse(Integer campaignId, String campaignStatus) {
+        this.campaignId = campaignId;
+        this.campaignStatus = campaignStatus;
+    }
+
+    public Integer getActivated() {
 		return activated;
 	}
 

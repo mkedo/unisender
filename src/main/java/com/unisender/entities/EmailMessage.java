@@ -14,6 +14,11 @@ public class EmailMessage extends Message {
 	private String attachments;
 	private String lang;
 
+    /* headers */
+
+    private String replyTo;
+    private String priority;
+
 	public EmailMessage(String senderName, String senderEmail, String subject,
 			String body) {
 		super();
@@ -71,4 +76,19 @@ public class EmailMessage extends Message {
 		this.lang = lang;
 	}
 
+    public String getReplyTo() {
+        return replyTo;
+    }
+
+    public void setReplyTo(String replyTo) {
+        this.replyTo = replyTo;
+    }
+
+    public String getPriority() {
+        return priority;
+    }
+
+    public void setPriority(String priority) {
+        this.priority = priority;
+    }
 }
