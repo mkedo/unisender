@@ -11,6 +11,8 @@ public class SendEmailRequest {
 	private Integer trackRead;
 	private Integer trackLinks;
 	private Integer attachMulti;
+
+    private String userCampaignId;
 	
 	public SendEmailRequest(String email, EmailMessage emailMessage,
 			MailList listId) {
@@ -66,5 +68,17 @@ public class SendEmailRequest {
 	public void setAttachMulti(Integer attachMulti) {
 		this.attachMulti = attachMulti;
 	}
-		
+
+    /**
+     * Optional attribute for grouping messages by.
+     *
+     * @return user campaign id
+     */
+    public String getUserCampaignId() {
+        return userCampaignId;
+    }
+
+    public void setUserCampaignId(String userCampaignId) {
+        this.userCampaignId = userCampaignId;
+    }
 }

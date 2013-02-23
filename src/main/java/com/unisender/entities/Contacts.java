@@ -9,6 +9,8 @@ public class Contacts {
 	private String contacts;
 	private List<MailList> listsIds;
 
+    private Integer invite;
+    private String comment;
 	
 	public Contacts(ContactType contactType, String contact) {
 		this(contactType, contact, null);
@@ -63,4 +65,19 @@ public class Contacts {
 		this.listsIds = listsIds;
 	}
 
+    public Integer getInvite() {
+        return invite;
+    }
+
+    public void setInvite(Integer invite) {
+        this.invite = invite;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
 }
