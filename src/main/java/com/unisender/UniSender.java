@@ -114,7 +114,7 @@ public class UniSender {
 				method,
 				isTestMode ? "&test_mode=1" : "");
 		try {
-			return new URL(useHttps ? "https" : "http", API_HOST, file);
+			return new URL("https" API_HOST, file);
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		}
